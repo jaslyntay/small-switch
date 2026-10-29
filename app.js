@@ -99,7 +99,15 @@ const SWITCHES = [
 ]
 
 const SCALES = [[1, 'Just me'], [4, 'My household'], [30, 'My class'], [500, 'My school']]
-const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const BADGES = [
+  { id: 'first', icon: 'seeding', title: 'First step', desc: 'Log your first switch', test: (st) => st.switchDays >= 1 },
+  { id: 'streak3', icon: 'flame', title: '3-day streak', desc: 'Keep a switch 3 days in a row', test: (st) => st.best >= 3 },
+  { id: 'streak7', icon: 'calendar-week', title: 'Full week', desc: '7 days in a row', test: (st) => st.best >= 7 },
+  { id: 'days20', icon: 'leaf', title: 'Habit forming', desc: '20 active days', test: (st) => st.activeDays >= 20 },
+  { id: 'streak30', icon: 'trophy', title: 'Month strong', desc: '30 days in a row', test: (st) => st.best >= 30 },
+  { id: 'co2', icon: 'cloud-off', title: '50 kg of CO₂', desc: 'Avoid 50 kg (110 lb) of CO₂', test: (st) => st.saved.co2 >= 50 },
+]
 
 const SOURCES = [
   ['US EPA, Greenhouse Gas Equivalencies Calculator: calculations and references (CO₂ per gallon of gasoline, per therm of natural gas, per kWh, and per car per year)', 'https://www.epa.gov/energy/greenhouse-gases-equivalencies-calculator-calculations-and-references'],
@@ -164,7 +172,7 @@ function freshState() {
     scale: 1,
     on: { shower: true, led: true },
     inputs: Object.fromEntries(SWITCHES.map((sw) => [sw.id, Object.fromEntries(sw.inputs.map((inp) => [inp.key, inp.value]))])),
-    week: {},
+    log: {},
   }
 }
 
@@ -178,7 +186,7 @@ function loadState() {
     scale: Number(saved.scale) > 0 ? Number(saved.scale) : 1,
     on: saved.on || base.on,
     inputs: Object.fromEntries(SWITCHES.map((sw) => [sw.id, { ...base.inputs[sw.id], ...(saved.inputs?.[sw.id] || {}) }])),
-    week: fromLink ? {} : saved.week || {},
+    log: fromLink ? {} : saved.log || {},
   }
 }
 
@@ -193,7 +201,7 @@ function readLink() {
 }
 
 function linkFor(state) {
-  const { week, ...shared } = state
+  const { log, ...shared } = state
   const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(shared)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
   return `${location.origin}${location.pathname}#s=${b64}`
 }
@@ -285,43 +293,135 @@ function renderScale() {
     `<label class="sr-only" for="custom-scale">Custom number of people</label><input type="number" id="custom-scale" min="1" max="100000" step="1" placeholder="Other" value="${custom ? state.scale : ''}" aria-describedby="scale-error"><span id="scale-error" class="hint" style="margin:0;color:#a32d2d"></span>`
 }
 
-function weekSavings() {
-  let t = {}
-  let days = 0
-  for (const sw of SWITCHES) {
-    if (!state.on[sw.id]) continue
-    const ticked = (state.week[sw.id] || []).filter(Boolean).length
-    days += ticked
-    const y = yearly(sw)
-    for (const [k, v] of Object.entries(y)) t[k] = (t[k] || 0) + (v / 365) * ticked
+/* ---------- Habit tracker ---------- */
+
+let view = { month: startOfMonth(new Date()), selected: dayKey(new Date()) }
+
+function pad(n) { return String(n).padStart(2, '0') }
+function dayKey(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` }
+function fromKey(k) { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d) }
+function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1) }
+function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x }
+const todayKey = () => dayKey(new Date())
+const longDate = (k) => fromKey(k).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })
+
+function doneOn(k) { return (state.log[k] || []).filter((id) => SWITCHES.some((sw) => sw.id === id)) }
+
+function trackerStats() {
+  const keys = Object.keys(state.log).filter((k) => doneOn(k).length).sort()
+  const active = new Set(keys)
+  // A streak survives until the end of today, so start counting from yesterday if today isn't logged yet.
+  let streak = 0
+  let cursor = active.has(todayKey()) ? new Date() : addDays(new Date(), -1)
+  while (active.has(dayKey(cursor))) { streak++; cursor = addDays(cursor, -1) }
+  let best = 0
+  let run = 0
+  let prev = null
+  for (const k of keys) {
+    run = prev && dayKey(addDays(fromKey(prev), 1)) === k ? run + 1 : 1
+    best = Math.max(best, run)
+    prev = k
   }
-  return { t, days }
+  let saved = {}
+  let switchDays = 0
+  for (const k of keys) {
+    for (const id of doneOn(k)) {
+      switchDays++
+      const y = yearly(SWITCHES.find((sw) => sw.id === id))
+      for (const [m, v] of Object.entries(y)) saved[m] = (saved[m] || 0) + v / 365
+    }
+  }
+  const month = view.month
+  const monthDays = keys.filter((k) => { const d = fromKey(k); return d.getFullYear() === month.getFullYear() && d.getMonth() === month.getMonth() }).length
+  return { streak, best, activeDays: keys.length, monthDays, switchDays, saved }
+}
+
+function cheer(st, todayCount, chosenCount) {
+  if (!chosenCount) return 'Add a switch above to start tracking.'
+  if (todayCount === chosenCount) return `Every switch done today. ${st.streak > 1 ? `That’s ${st.streak} days in a row.` : 'Great start.'}`
+  if (todayCount > 0) return `${todayCount} of ${chosenCount} done today. Keep going.`
+  if (st.streak > 0) return `Your ${st.streak}-day streak is still alive. Log a switch today to keep it.`
+  return 'Tap a switch when you’ve done it today.'
+}
+
+function dayToggles(k, chosen) {
+  const done = doneOn(k)
+  return `<div class="row">${chosen.map((sw) => {
+    const on = done.includes(sw.id)
+    return `<button class="chip check" data-log="${k}:${sw.id}" aria-pressed="${on}"><i class="ti ti-${on ? 'circle-check' : sw.icon}" aria-hidden="true"></i> ${sw.title}</button>`
+  }).join('')}</div>`
+}
+
+function calendar(chosenCount) {
+  const month = view.month
+  const first = startOfMonth(month)
+  const lead = (first.getDay() + 6) % 7
+  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate()
+  const today = todayKey()
+  const thisMonth = startOfMonth(new Date()).getTime() === first.getTime()
+  const cells = []
+  for (let i = 0; i < lead; i++) cells.push('<span class="cal-cell blank" aria-hidden="true"></span>')
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(month.getFullYear(), month.getMonth(), d)
+    const k = dayKey(date)
+    const n = doneOn(k).length
+    const future = k > today
+    const level = n === 0 ? 0 : Math.min(4, Math.ceil((n / Math.max(1, chosenCount)) * 4))
+    const label = `${date.toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}: ${future ? 'not yet' : `${n} switch${n === 1 ? '' : 'es'} done`}`
+    cells.push(`<button class="cal-cell lv${level}${k === today ? ' today' : ''}${k === view.selected ? ' selected' : ''}" data-select="${k}" aria-label="${label}" aria-pressed="${k === view.selected}" ${future ? 'disabled' : ''}>
+      <span class="cal-num">${d}</span>${n ? `<span class="cal-dot">${n >= chosenCount && chosenCount ? '<i class="ti ti-star" aria-hidden="true"></i>' : n}</span>` : ''}</button>`)
+  }
+  return `<div class="cal">
+    <div class="cal-head">
+      <button class="chip icon-only" data-month="-1" aria-label="Previous month"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+      <h3 aria-live="polite">${month.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</h3>
+      <button class="chip icon-only" data-month="1" aria-label="Next month" ${thisMonth ? 'disabled' : ''}><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+    </div>
+    <div class="cal-grid">${WEEKDAYS.map((w) => `<span class="cal-wd" aria-hidden="true">${w}</span>`).join('')}${cells.join('')}</div>
+    <div class="cal-legend" aria-hidden="true">Fewer <span class="cal-cell lv0"></span><span class="cal-cell lv1"></span><span class="cal-cell lv2"></span><span class="cal-cell lv3"></span><span class="cal-cell lv4"></span> More</div>
+  </div>`
 }
 
 function renderPlan() {
   const chosen = SWITCHES.filter((sw) => state.on[sw.id])
-  if (!chosen.length) {
-    $('#plan').innerHTML = '<p class="empty">Add a switch above to start your plan.</p>'
-    return
-  }
   const u = displayUnits(state.settings)
-  const { t, days } = weekSavings()
-  $('#plan').innerHTML = `<p class="hint" style="margin-top:4px">Tick each day you stick with it. Your week adds up below. This part counts just you, and it’s saved on this device.</p>
-  <ul class="plan-list">${chosen.map((sw) => {
-    const week = state.week[sw.id] || []
-    return `<li class="plan-item"><div class="plan-item-head"><span><i class="ti ti-${sw.icon}" aria-hidden="true"></i> ${sw.title}</span></div>
-      <div class="days" role="group" aria-label="${sw.title}: days done this week">${DAYS.map((day, i) => `<button class="day" data-day="${sw.id}:${i}" aria-pressed="${!!week[i]}" aria-label="${day}">${day}</button>`).join('')}</div></li>`
-  }).join('')}</ul>
-  <div class="week" aria-live="polite">${days === 0 ? 'Nothing ticked yet this week.' : `This week you’ve saved about ${[
-    t.co2 ? `${fmt(u.co2(t.co2)[0])} ${u.co2(t.co2)[1]}` : '',
-    t.water ? `${fmt(u.water(t.water)[0])} ${u.water(t.water)[1]} of water` : '',
-    t.usd ? money(t.usd) : '',
-    t.bottles ? `${fmt(t.bottles)} bottles` : '',
-  ].filter(Boolean).join(', ')}.`}</div>
+  const st = trackerStats()
+  const today = todayKey()
+  const todayCount = doneOn(today).filter((id) => state.on[id]).length
+  const savedBits = [
+    st.saved.co2 ? `${fmt(u.co2(st.saved.co2)[0])} ${u.co2(st.saved.co2)[1]}` : '',
+    st.saved.water ? `${fmt(u.water(st.saved.water)[0])} ${u.water(st.saved.water)[1]} of water` : '',
+    st.saved.usd ? money(st.saved.usd) : '',
+    st.saved.bottles ? `${fmt(st.saved.bottles)} bottles` : '',
+  ].filter(Boolean)
+
+  $('#plan').innerHTML = `
+  <div class="today">
+    <div class="today-head"><span class="small">Today · ${longDate(today)}</span><span class="today-msg" aria-live="polite">${cheer(st, todayCount, chosen.length)}</span></div>
+    ${chosen.length ? dayToggles(today, chosen) : ''}
+  </div>
+
+  <div class="stats">
+    <div class="stat st-flame"><i class="ti ti-flame" aria-hidden="true"></i><b>${st.streak}</b><span>day streak</span></div>
+    <div class="stat"><i class="ti ti-award" aria-hidden="true"></i><b>${st.best}</b><span>best streak</span></div>
+    <div class="stat"><i class="ti ti-calendar-check" aria-hidden="true"></i><b>${st.monthDays}</b><span>active days in ${view.month.toLocaleDateString(undefined, { month: 'short' })}</span></div>
+    <div class="stat st-saved"><i class="ti ti-leaf" aria-hidden="true"></i><b>${savedBits[0] || '0'}</b><span>${savedBits.length > 1 ? `plus ${savedBits.slice(1).join(', ')}` : 'saved so far'}</span></div>
+  </div>
+
+  <div class="tracker-cols">
+    ${calendar(chosen.length)}
+    <div class="day-panel">
+      ${view.selected === today ? `<h3>Today</h3><p class="hint">Check off switches above, or pick any past day on the calendar to fill it in.</p>` : `<h3>${longDate(view.selected)}</h3><p class="hint">Forgot to log? Tick what you did that day.</p>${chosen.length ? dayToggles(view.selected, chosen) : ''}`}
+      <h3 style="margin-top:16px">Badges</h3>
+      <ul class="badges">${BADGES.map((b) => { const got = b.test(st); return `<li class="badge${got ? ' got' : ''}"><i class="ti ti-${got ? b.icon : 'lock'}" aria-hidden="true"></i><span><b>${b.title}</b><br>${b.desc}</span><span class="sr-only">${got ? 'earned' : 'not earned yet'}</span></li>` }).join('')}</ul>
+    </div>
+  </div>
+
+  <p class="hint" style="margin-top:12px">Your tracker counts just you and is saved on this device. Savings so far use the daily average of each switch’s yearly estimate.</p>
   <div class="row actions">
     <button class="chip" id="print"><i class="ti ti-printer" aria-hidden="true"></i> Print my plan</button>
     <button class="chip" id="share"><i class="ti ti-share" aria-hidden="true"></i> Share my switches</button>
-    <button class="chip" id="reset-week"><i class="ti ti-refresh" aria-hidden="true"></i> Start a new week</button>
+    <button class="chip" id="clear-log"><i class="ti ti-trash" aria-hidden="true"></i> Clear my history</button>
   </div>
   <div id="share-out"></div>`
 }
@@ -420,15 +520,30 @@ document.addEventListener('click', async (e) => {
     renderTotals()
     save()
     document.querySelector(`[data-scale="${t.dataset.scale}"]`)?.focus()
-  } else if (t.dataset.day) {
-    const [id, i] = t.dataset.day.split(':')
-    const week = (state.week[id] ||= [])
-    week[Number(i)] = !week[Number(i)]
+  } else if (t.dataset.log) {
+    const [k, id] = t.dataset.log.split(':')
+    if (k > todayKey()) return
+    const done = new Set(state.log[k] || [])
+    const adding = !done.has(id)
+    if (adding) done.add(id)
+    else done.delete(id)
+    if (done.size) state.log[k] = [...done]
+    else delete state.log[k]
     renderPlan()
-    document.querySelector(`[data-day="${t.dataset.day}"]`)?.focus()
+    document.querySelector(`[data-log="${t.dataset.log}"]`)?.focus()
     save()
-  } else if (t.id === 'reset-week') {
-    state.week = {}
+  } else if (t.dataset.select) {
+    view.selected = t.dataset.select
+    renderPlan()
+    document.querySelector(`[data-select="${t.dataset.select}"]`)?.focus()
+  } else if (t.dataset.month) {
+    const m = view.month
+    view.month = new Date(m.getFullYear(), m.getMonth() + Number(t.dataset.month), 1)
+    renderPlan()
+    document.querySelector(`[data-month="${t.dataset.month}"]:not([disabled])`)?.focus()
+  } else if (t.id === 'clear-log') {
+    if (!confirm('Clear every day you’ve logged on this device? This can’t be undone.')) return
+    state.log = {}
     renderPlan()
     save()
   } else if (t.id === 'print') {

@@ -20,7 +20,7 @@ Every formula is shown in the app under "How we calculate", and every price and 
 ## Making it actionable
 
 - **Scale it up:** count the savings for just you, your household, your class (30) or your school (500), or type any number.
-- **Track it:** tick each day you stick with a switch to see what you've actually saved this week.
+- **Track it:** a habit tracker with a daily check-in, a month calendar shaded by how many switches you did each day, current and best streaks, badges, and the savings your logged days add up to. You can fill in past days you forgot to log.
 - **Share it:** share a link that opens with your switches and settings, or print your plan.
 
 ## Sources
@@ -38,7 +38,7 @@ Every formula is shown in the app under "How we calculate", and every price and 
 - The default grid factor is the US average; cleaner or dirtier local grids change the CO₂ result, so it's editable.
 - The bottle switch counts bottles and money only. CO₂ per bottle varies too much by source to state confidently.
 - Rebound effects (for example, spending the money saved on something carbon-intensive) aren't modeled.
-- Savings in the "My switch plan" tracker are a daily average of the yearly figure, not a measurement of each day.
+- Savings in the habit tracker use a daily average of each switch's yearly figure, not a measurement of each day. Tracker history is stored only on the device.
 
 ## Run it
 
