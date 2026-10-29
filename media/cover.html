@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Small Switch cover</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { width: 1500px; height: 1000px; overflow: hidden; font-family: 'Nunito', sans-serif; color: #17231c; background: #f1f8f3; position: relative; }
+  .blob { position: absolute; border-radius: 50%; }
+  .wrap { position: relative; display: grid; grid-template-columns: 650px 1fr; gap: 56px; padding: 70px 76px; height: 100%; }
+  .event { display: inline-block; background: #fff; color: #0f6e56; border: 2px solid #9fe1cb; border-radius: 999px; padding: 6px 18px; font-weight: 700; font-size: 20px; }
+  .brand { display: flex; align-items: center; gap: 18px; margin: 34px 0 20px; }
+  h1 { font-size: 80px; line-height: 1; font-weight: 800; letter-spacing: -1px; }
+  .lede { font-size: 31px; line-height: 1.35; color: #085041; font-weight: 600; margin-bottom: 34px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .stat { border-radius: 22px; padding: 18px; }
+  .stat i { font-size: 30px; }
+  .stat b { display: block; font-size: 40px; font-weight: 800; line-height: 1.1; margin-top: 6px; }
+  .stat span { font-size: 18px; font-weight: 600; }
+  .note { margin-top: 18px; font-size: 19px; color: #536257; }
+  .right { display: flex; flex-direction: column; justify-content: center; gap: 16px; }
+  .card { background: #fff; border-radius: 28px; padding: 22px 24px; border: 1px solid #dbe6dd; }
+  .today { background: #e1f5ee; color: #085041; border-radius: 20px; padding: 16px 18px; }
+  .today p { font-size: 17px; }
+  .today h3 { font-size: 24px; font-weight: 800; margin: 2px 0 12px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { border-radius: 999px; padding: 8px 14px; font-size: 17px; font-weight: 700; display: inline-flex; gap: 6px; align-items: center; background: #fff; border: 1px solid #b9cbbd; }
+  .chip.on { background: #0f6e56; color: #fff; border-color: #0f6e56; }
+  .row { display: flex; gap: 12px; margin-top: 14px; }
+  .mini { flex: 1; border-radius: 16px; padding: 10px 14px; display: flex; gap: 10px; align-items: center; font-size: 15px; font-weight: 600; }
+  .mini b { font-size: 26px; font-weight: 800; display: block; line-height: 1; }
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; margin-top: 16px; }
+  .wd { font-size: 14px; color: #536257; text-align: center; font-weight: 700; }
+  .d { aspect-ratio: 1.25; border-radius: 10px; border: 1px solid #dbe6dd; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; flex-direction: column; line-height: 1.1; }
+  .l1 { background: #c8eadc; border-color: #c8eadc; color: #085041; }
+  .l2 { background: #8fd6b8; border-color: #8fd6b8; color: #04342c; }
+  .l3 { background: #3fb68c; border-color: #3fb68c; color: #04342c; }
+  .l4 { background: #0f6e56; border-color: #0f6e56; color: #fff; }
+  .x { opacity: 0.35; }
+  .calhead { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 20px; }
+</style>
+</head>
+<body>
+  <div class="blob" style="width:520px;height:520px;background:#e1f5ee;right:-170px;top:-210px"></div>
+  <div class="blob" style="width:360px;height:360px;background:#eaf3de;left:-140px;bottom:-160px"></div>
+  <div class="blob" style="width:110px;height:110px;background:#faeeda;left:640px;top:52px"></div>
+
+  <div class="wrap">
+    <div>
+      <span class="event">Green Shift Hacks 2026</span>
+      <div class="brand">
+        <svg width="104" height="104" viewBox="0 0 64 64"><path d="M32 58V30" stroke="#0F6E56" stroke-width="4" stroke-linecap="round"/><path d="M32 34C18 34 10 24 10 12c14 0 22 9 22 22z" fill="#5DCAA5"/><path d="M32 28c0-12 9-20 22-20 0 13-9 20-22 20z" fill="#97C459"/></svg>
+        <h1>Small Switch</h1>
+      </div>
+      <p class="lede">Everyday swaps, turned into real numbers.<br>Then multiplied by your whole class.</p>
+      <div class="stats">
+        <div class="stat" style="background:#eaf3de;color:#27500a"><i class="ti ti-leaf"></i><b>5.6 t</b><span>CO₂ a year</span></div>
+        <div class="stat" style="background:#e6f1fb;color:#0c447c"><i class="ti ti-droplet"></i><b>55k</b><span>gallons of water</span></div>
+        <div class="stat" style="background:#eeedfe;color:#3c3489"><i class="ti ti-coin"></i><b>$3k</b><span>saved</span></div>
+      </div>
+      <p class="note">A class of 30 taking 2-minute shorter showers and switching 5 bulbs to LED. Estimates from cited EPA and DOE figures.</p>
+    </div>
+
+    <div class="right">
+      <div class="card">
+        <div class="today">
+          <p>Today · Wednesday, October 28</p>
+          <h3>Every switch done today. That’s 6 days in a row.</h3>
+          <div class="chips">
+            <span class="chip on"><i class="ti ti-circle-check"></i> Shorter showers</span>
+            <span class="chip on"><i class="ti ti-circle-check"></i> LED bulbs</span>
+            <span class="chip on"><i class="ti ti-circle-check"></i> Bike short trips</span>
+          </div>
+        </div>
+        <div class="row">
+          <div class="mini" style="background:#faeeda;color:#633806"><i class="ti ti-flame" style="font-size:30px"></i><div><b>6</b>day streak</div></div>
+          <div class="mini" style="background:#eaf3de;color:#27500a"><i class="ti ti-leaf" style="font-size:30px"></i><div><b>14 lb</b>CO₂ so far</div></div>
+          <div class="mini" style="background:#faeeda;color:#633806"><i class="ti ti-award" style="font-size:30px"></i><div><b>2</b>badges</div></div>
+        </div>
+        <div class="calhead" style="margin-top:16px"><span>October 2026</span><span style="font-size:15px;color:#536257;font-weight:600">darker = more switches</span></div>
+        <div class="cal">
+          <span class="wd">Mon</span><span class="wd">Tue</span><span class="wd">Wed</span><span class="wd">Thu</span><span class="wd">Fri</span><span class="wd">Sat</span><span class="wd">Sun</span>
+          <span></span><span></span><span></span><span class="d">1</span><span class="d l1">2</span><span class="d">3</span><span class="d l2">4</span>
+          <span class="d l1">5</span><span class="d">6</span><span class="d l2">7</span><span class="d l3">8</span><span class="d">9</span><span class="d l1">10</span><span class="d l2">11</span>
+          <span class="d l2">12</span><span class="d l3">13</span><span class="d">14</span><span class="d l2">15</span><span class="d l3">16</span><span class="d l2">17</span><span class="d l4">18</span>
+          <span class="d l1">19</span><span class="d">20</span><span class="d">21</span><span class="d l3">22</span><span class="d l4">23</span><span class="d l2">24</span><span class="d l4">25</span>
+          <span class="d l3">26</span><span class="d l4">27</span><span class="d l4" style="outline:2px solid #17231c;outline-offset:1px">28</span><span class="d x">29</span><span class="d x">30</span><span class="d x">31</span><span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
