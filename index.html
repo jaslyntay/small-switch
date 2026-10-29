@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <a class="skip" href="#switches">Skip to the switches</a>
+  <a class="skip" href="#plan-card">Skip to my tracker</a>
 
   <header class="top">
     <svg class="sprout" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 58V30" stroke="#0F6E56" stroke-width="4" stroke-linecap="round"/><path d="M32 34C18 34 10 24 10 12c14 0 22 9 22 22z" fill="#5DCAA5"/><path d="M32 28c0-12 9-20 22-20 0 13-9 20-22 20z" fill="#97C459"/></svg>
@@ -25,6 +25,11 @@
   </header>
 
   <main>
+    <section class="card" aria-labelledby="plan-title" id="plan-card">
+      <h2 id="plan-title">My habit tracker</h2>
+      <div id="plan"></div>
+    </section>
+
     <section class="card totals" aria-labelledby="totals-title">
       <div class="totals-head">
         <h2 id="totals-title">Your switches save <span id="scope-label">per year</span></h2>
@@ -43,10 +48,6 @@
       <div class="grid" id="switches" tabindex="-1"></div>
     </section>
 
-    <section class="card" aria-labelledby="plan-title" id="plan-card">
-      <h2 id="plan-title">My habit tracker</h2>
-      <div id="plan"></div>
-    </section>
 
     <details class="card settings">
       <summary><i class="ti ti-adjustments" aria-hidden="true"></i> My home and prices <span class="hint">(change these to match where you live)</span></summary>

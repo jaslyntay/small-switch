@@ -337,7 +337,7 @@ function trackerStats() {
 }
 
 function cheer(st, todayCount, chosenCount) {
-  if (!chosenCount) return 'Add a switch above to start tracking.'
+  if (!chosenCount) return 'Add a switch below to start tracking.'
   if (todayCount === chosenCount) return `Every switch done today. ${st.streak > 1 ? `That’s ${st.streak} days in a row.` : 'Great start.'}`
   if (todayCount > 0) return `${todayCount} of ${chosenCount} done today. Keep going.`
   if (st.streak > 0) return `Your ${st.streak}-day streak is still alive. Log a switch today to keep it.`
